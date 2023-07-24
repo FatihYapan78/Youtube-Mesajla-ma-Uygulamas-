@@ -16,10 +16,12 @@ def index(request):
 def room(request, room_name):
     users = User.objects.all().exclude(username=request.user)
     room = Room.objects.get(id=room_name)
+    messages = Message.objects.filter(room=room)
     return render(request, "chat/room2.html", {
         "room_name": room_name,
         'users':users,
         'room':room,
+        'messages':messages,
         })
 
 

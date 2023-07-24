@@ -12,3 +12,6 @@ class Message(models.Model):
     room = models.ForeignKey(Room, verbose_name=("Oda"), on_delete=models.CASCADE)
     content = models.TextField(("Mesaj İçeriği"))
     date = models.DateTimeField(auto_now_add=True)
+    tipi_nedir = models.CharField(max_length=50, null=True)
+    def get_short_date(self):
+        return str(self.date.hour) + ":" + str(self.date.minute)

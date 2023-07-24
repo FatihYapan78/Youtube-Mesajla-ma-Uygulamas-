@@ -1,4 +1,57 @@
 const roomName = JSON.parse(document.getElementById('room-name').textContent);
+const user = JSON.parse(document.getElementById('user').textContent);
+document.getElementById('hiddeninput').addEventListener('change',handleFileSelect,false)
+function handleFileSelect(){
+    var file = document.getElementById('hiddeninput').files[0]
+    getBase64(file, file.type)
+}
+function getBase64(file, filetype){
+    var type = filetype.split('/')[0]
+    var reader = new FileReader();
+    reader.readAsDataURL(file)
+
+    reader.onload = function(){
+        chatSocket.send(JSON.stringify({
+            'tipi_nedir':type,
+            'message':reader.result
+        }))
+    }
+}
+
+var isRecord = false
+navigator.mediaDevices.getUserMedia({audio:true})
+.then(function(mediaStreamObject){
+    const mic = document.getElementById('mic');
+
+    const mediaRecorder = new MediaRecorder(mediaStreamObject)
+
+    mic.addEventListener('click', function(e){
+        if(isRecord){
+            mic.style.color = "";
+            isRecord = false;
+            mediaRecorder.stop();
+        }
+        else{
+            mic.style.color = "red";
+            isRecord = true;
+            mediaRecorder.start()
+        }
+    })
+
+
+    var dataArray = []
+    mediaRecorder.ondataavailable = function (e){
+        dataArray.push(e.data)
+    }
+
+    mediaRecorder.onstop= function(e){
+        let audioData = new Blob(dataArray, {'type':"audio/mp3"})
+        dataArray= []
+        getBase64(audioData, audioData.type)
+    }
+})
+
+
 const conservation = document.getElementById('conversation');
         // Connection / Bağlantı 
         const chatSocket = new WebSocket(
@@ -7,18 +60,47 @@ const conservation = document.getElementById('conversation');
         // WEbSoketten veri geldiğinde çalışır.
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
-            var message = `<div class="row message-body">
-            <div class="col-sm-12 message-main-sender">
-            <div class="sender">
-                <div class="message-text">
-                ${data.message}
+            const message_type = data.tipi_nedir;
+            if (message_type === "text"){
+                var message = data.message
+            }
+            else if(message_type === "image"){
+                var message = `<img src="${data.message}" width="250" heigth="250">`
+            }
+            else if(message_type === "audio"){
+                var message = `<audio width="250" controls><source src="${data.message}"></audio>`
+            }
+            else if(message_type === "video"){
+                var message = `<video width="320" height="240" controls><source src="${data.message}"></video>`
+            }
+            if(user==data.user){
+                var message = `<div class="row message-body">
+                <div class="col-sm-12 message-main-sender">
+                <div class="sender">
+                    <div class="message-text">
+                    ${message}
+                    </div>
+                    <span class="message-time pull-right">
+                    ${data.date}
+                    </span>
                 </div>
-                <span class="message-time pull-right">
-                Sun
-                </span>
-            </div>
-            </div>
-        </div>`
+                </div>
+            </div>`
+            }
+            else{
+                var message = `<div class="row message-body">
+                <div class="col-sm-12 message-main-receiver">
+                <div class="receiver">
+                    <div class="message-text">
+                    ${message}
+                    </div>
+                    <span class="message-time pull-right">
+                    ${data.date}
+                    </span>
+                </div>
+                </div>
+            </div>`
+            }
         conservation.innerHTML += message;
         };
         // WEbSoketten bağlantısı kapandığında 
@@ -39,6 +121,7 @@ const conservation = document.getElementById('conversation');
             const messageInputDom = document.querySelector('#comment');
             const message = messageInputDom.value;
             chatSocket.send(JSON.stringify({
+                'tipi_nedir':"text",
                 'message': message
             }));
             messageInputDom.value = '';

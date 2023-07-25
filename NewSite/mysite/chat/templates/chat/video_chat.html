@@ -303,89 +303,25 @@
           </a>
           <span class="heading-online">Online</span>
         </div>
-        <a href="{% url 'video' room.id %}">
-          <div class="col-sm-1 col-xs-1  heading-dot pull-right">
-            <i class="fa fa-video-camera fa-2x  pull-right" aria-hidden="true"></i>
-          </div>
-        </a>
+        <div class="col-sm-1 col-xs-1  heading-dot pull-right">
+          <i class="fa fa-video-camera fa-2x  pull-right" aria-hidden="true"></i>
+        </div>
       </div>
 
-      <div class="row message" id="conversation">
+      <div class="row message text-center" id="conversation">
 
         
-        {% for message in messages %}
-        
-        {% if message.user == request.user %}
-        <div class="row message-body">
-           <div class="col-sm-12 message-main-sender">
-             <div class="sender">
-               <div class="message-text">
-                
-                {% if message.tipi_nedir == "text" %}
-                {{ message.content }}
-                {% elif message.tipi_nedir == "image" %}
-                <img src="{{ message.content }}" width="250" height="250">
-                {% elif message.tipi_nedir == "audio" %}
-                <audio width="250" controls><source src="{{ message.content }}"></audio>
-                {% elif message.tipi_nedir == "video" %}
-                <video width="320" height="240" controls><source src="{{ message.content }}"></video>
-                {% endif %}
-                  
-                
-               </div>
-               <span class="message-time pull-right">
-                 {{ message.get_short_date }}
-               </span>
-             </div>
-           </div> 
-         </div>
-          {% else %}
-          <div class="row message-body">
-           <div class="col-sm-12 message-main-receiver">
-             <div class="receiver">
-               <div class="message-text">
-                {% if message.tipi_nedir == "text" %}
-                {{ message.content }}
-                {% elif message.tipi_nedir == "image" %}
-                <img src="{{ message.content }}" width="250" height="250">
-                {% elif message.tipi_nedir == "audio" %}
-                <audio width="250" controls><source src="{{ message.content }}"></audio>
-                {% elif message.tipi_nedir == "video" %}
-                <video width="320" height="240" controls><source src="{{ message.content }}"></video>
-                {% endif %}
-               </div>
-               <span class="message-time pull-right">
-                {{ message.get_short_date }}
-               </span>
-             </div>
-           </div> 
-         </div> 
-        {% endif %}
-          
-        {% endfor %}
-          
+        <video src="" id="video1" width="300" height="300" style="margin-left: 30px;"></video>
+        <video src="" id="video2" width="300" height="300" style="margin-left: 100px;"></video>
+        <br><br>
+
+        <button class="btn btn-info" id="microphone"><i class="fa fa-microphone"></i></button>
+        <button class="btn btn-info" id="camera"><i class="fa fa-video-camera"></i></button>
+        <button onclick="window.location = '{% url "room" room.id %}'" class="btn btn-danger">x</button>
 
         
       </div>
 
-      <div class="row reply">
-        <div class="col-sm-1 col-xs-1 reply-emojis">
-          <i class="fa fa-smile-o fa-2x"></i>
-        </div>
-        <div class="col-sm-1 col-xs-1 reply-emojis">
-          <i class="fa fa-microphone fa-2x" id="mic"></i>
-        </div>
-        <div class="col-sm-9 col-xs-9 reply-main">
-          <input type="text" class="form-control" id="comment">
-        </div>
-        <div class="col-sm-1 col-xs-1 reply-recording">
-          <input type="file" id="hiddeninput" class="hidden">
-          <i class="fa fa-file fa-2x" id="file" onclick="document.getElementById('hiddeninput').click()" aria-hidden="true"></i>
-        </div>
-        <div class="col-sm-1 col-xs-1 reply-send" id="send">
-          <i class="fa fa-send fa-2x" aria-hidden="true"></i>
-        </div>
-      </div>
     </div>
   </div>
 </div>
@@ -395,8 +331,17 @@
 
 {{ request.user.username|json_script:"user" }}
 
+
+{% if request.user == room.first_user %}
+{{ room.second_user.username|json_script:"second_user" }}
+{% else %}
+{{ room.first_user.username|json_script:"second_user" }}
+  
+{% endif %}
+  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/0.3.16/peer.min.js"></script>
 <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
 <script src="http://netdna.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-<script src="{% static 'js/app.js' %}"></script>
+<script src="{% static 'js/videoChat.js' %}"></script>
 </body>
 </html>

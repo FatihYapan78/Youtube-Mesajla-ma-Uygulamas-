@@ -19,40 +19,54 @@ function getBase64(file, filetype){
 }
 
 var isRecord = false
-navigator.mediaDevices.getUserMedia({audio:true})
-.then(function(mediaStreamObject){
-    const mic = document.getElementById('mic');
+const startStop = document.getElementById('mic');
 
-    const mediaRecorder = new MediaRecorder(mediaStreamObject)
+startStop.onclick=()=>{
+    if(isRecord){
+        StopRecord();
+        mic.style.color = "";
+        isRecord = false;
+    }
+    else{
+        StartRecord();
+        mic.style.color = "red";
+        isRecord = true;
+    }
+}
 
-    mic.addEventListener('click', function(e){
-        if(isRecord){
-            mic.style.color = "";
-            isRecord = false;
-            mediaRecorder.stop();
+function StartRecord(){
+    navigator.mediaDevices.getUserMedia({audio:true})
+    .then(stream=>{
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.start();
+        dataArray = [];
+
+        mediaRecorder.ondataavailable = function(e){
+            dataArray.push(e.data);
         }
-        else{
-            mic.style.color = "red";
-            isRecord = true;
-            mediaRecorder.start()
+
+        mediaRecorder.onstop = function(e){
+            audioData = new Blob(dataArray, {'type':"audio/mp3"})
+            dataArray= []
+            getBase64(audioData, audioData.type)
+
+        stream.getTracks().forEach(function(track){
+            if(track.readyState=="live" && track.kind==="audio"){
+                track.stop();
+            }
+        })
         }
     })
+}
 
-
-    var dataArray = []
-    mediaRecorder.ondataavailable = function (e){
-        dataArray.push(e.data)
-    }
-
-    mediaRecorder.onstop= function(e){
-        let audioData = new Blob(dataArray, {'type':"audio/mp3"})
-        dataArray= []
-        getBase64(audioData, audioData.type)
-    }
-})
+function StopRecord(){
+    mediaRecorder.stop();
+}
 
 
 const conservation = document.getElementById('conversation');
+// Scrool
+conservation.scrollTop = conservation.scrollHeight;
         // Connection / Bağlantı 
         const chatSocket = new WebSocket(
             'ws://' + window.location.host + '/ws/chat/' + roomName + '/'
@@ -102,6 +116,8 @@ const conservation = document.getElementById('conversation');
             </div>`
             }
         conservation.innerHTML += message;
+        // Scrool
+        conservation.scrollTop = conservation.scrollHeight;
         };
         // WEbSoketten bağlantısı kapandığında 
         chatSocket.onclose = function(e) {

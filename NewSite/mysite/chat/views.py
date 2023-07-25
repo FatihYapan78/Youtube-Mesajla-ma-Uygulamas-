@@ -17,6 +17,11 @@ def room(request, room_name):
     users = User.objects.all().exclude(username=request.user)
     room = Room.objects.get(id=room_name)
     messages = Message.objects.filter(room=room)
+
+    if request.user != room.first_user:
+        if request.user != room.second_user:
+            return redirect('index')
+
     return render(request, "chat/room2.html", {
         "room_name": room_name,
         'users':users,
@@ -24,6 +29,13 @@ def room(request, room_name):
         'messages':messages,
         })
 
+@login_required(login_url="login")
+def video(request, room_name):
+    room = Room.objects.get(id=room_name)
+    if request.user != room.first_user:
+        if request.user != room.second_user:
+            return redirect('index')
+    return render(request, 'chat/video_chat.html',{'room':room})
 
 @login_required(login_url="login")
 def start_chat(request,username):
